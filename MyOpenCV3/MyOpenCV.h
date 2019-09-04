@@ -65,14 +65,15 @@ Mat MyOpencv::M_resize_zjl(Mat src,int x,int y)
 	resize(matSrc,matDst2,matDst.size(),0,0,1);
 	return matDst2;
 }
+//双线性插值
 Mat MyOpencv::M_resize_sxx(Mat src,int x,int y)
 {
 	Mat matSrc, matDst;			//声明图像 源变量和目标变量
-	Mat matDst2;	//
+	//Mat matDst2;	//调用resize用于对比的目标图像
 	matSrc = src;							//获取源
 	//Mat  (大小，类型，三原色数值)
 	matDst = Mat(Size(x, y), matSrc.type(), Scalar::all(0));	//把目标像素矩阵元素全设置为0
-	matDst2 = Mat(matDst.size(), matSrc.type(), Scalar::all(0));
+	//matDst2 = Mat(matDst.size(), matSrc.type(), Scalar::all(0));
 	//公式：srcX=dstX* (srcWidth/dstWidth) , srcY = dstY * (srcHeight/dstHeight)
 	double scale_x = (double)matSrc.cols / matDst.cols;
 	double scale_y = (double)matSrc.rows / matDst.cols;
@@ -124,7 +125,7 @@ Mat MyOpencv::M_resize_sxx(Mat src,int x,int y)
 			}
 		}
 	}
-	//return matDst;
-	resize(matSrc,matDst2,matDst.size(),0,0,1);
-	return matDst2;
+	return matDst;
+	//resize(matSrc,matDst2,matDst.size(),0,0,1);
+	//return matDst2;
 }
