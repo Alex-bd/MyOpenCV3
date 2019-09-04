@@ -19,10 +19,12 @@ using namespace cv;
 int main()
 {
 	Mat src,dst;
-	src = imread("D:/CODE/MyOpenCV3/1.jpg");
+	//src = imread("D:/CODE/MyOpenCV3/1.jpg");
+	src = imread("D:/CODE/ImageDashi/ImageDashi/ImageDashi/Image/edit/img_black.png");
+	//经上面的测试，说明.jpg格式和.png格式的文件都能正常运行
 	MyOpencv m;
-	dst = m.M_resize_zjl(src,dst,800,600);
-	
+	//dst = m.M_resize_zjl(src,800,600);
+	dst = m.M_resize_sxx(src,400,400);
 	imshow("show",dst);
 
 	waitKey(0);
