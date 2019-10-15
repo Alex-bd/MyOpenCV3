@@ -18,7 +18,8 @@ public:
 	//函数声明：
 	Mat M_resize_zjl(Mat src,int x,int y);	//最近邻 重置大小
 	Mat M_resize_sxx(Mat src,int x,int y);	//双线性
-	Mat xuanzhuan(Mat src, int angle);		//旋转
+	Mat xuanzhuan(Mat src, int angle);		//旋转 仿射变换
+	Mat flip(Mat src,int flag);
 private:
 
 };
@@ -182,6 +183,34 @@ Mat MyOpencv::xuanzhuan(Mat src, int angle)
 			}
 		}
 	}
+	return matDst;
+}
 
+//镜像
+Mat MyOpencv::flip(Mat src,int flag)
+{
+	Mat matSrc, matDst;
+	matSrc = src;
+	int width = matSrc.cols;
+	int height = matSrc.rows;
+	matDst = Mat(Size(width,height), matSrc.type(), Scalar::all(0));
+	if (flag == 0)//水平镜像
+	{
+		for (int y = 0; y < matSrc.cols; y++)
+		{
+			for (int x = 0; x < matSrc.rows; x++)
+			{
+				matDst.at<cv::Vec3b>(y,x) = matSrc.at<cv::Vec3b>(y,width-x-1);
+			}
+		}
+	}
+	else if (flag > 0)	//垂直镜像
+	{
+
+	}
+	else
+	{
+
+	}
 	return matDst;
 }
