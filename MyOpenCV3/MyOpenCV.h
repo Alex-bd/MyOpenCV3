@@ -18,7 +18,7 @@ public:
 	//函数声明：
 	Mat M_resize_zjl(Mat src,int x,int y);	//最近邻 重置大小
 	Mat M_resize_sxx(Mat src,int x,int y);	//双线性
-
+	Mat xuanzhuan(Mat src, int angle);		//旋转
 private:
 
 };
@@ -119,7 +119,7 @@ Mat MyOpencv::M_resize_sxx(Mat src,int x,int y)
 			for (int  k = 0; k < matSrc.channels(); k++)
 			{
 				*(dataDst + j * stepDst + 3 * i + k) = (*(dataSrc + sy * stepSrc + 3 * sx + k) * cbufx[0] * cbufy[0] +
-					*(dataSrc + (sy + 1)*stepSrc + 3 * sx + k) * cbufx[0] * cbufy[1] +
+					*(dataSrc + (sy + 1) * stepSrc + 3 * sx + k) * cbufx[0] * cbufy[1] +
 					*(dataSrc + sy * stepSrc + 3 * (sx + 1) + k) * cbufx[1] * cbufy[0] +
 					*(dataSrc + (sy + 1)*stepSrc + 3 * (sx + 1) + k) * cbufx[1] * cbufy[1]) >> 22;
 			}
@@ -128,4 +128,60 @@ Mat MyOpencv::M_resize_sxx(Mat src,int x,int y)
 	return matDst;
 	//resize(matSrc,matDst2,matDst.size(),0,0,1);
 	//return matDst2;
+}
+
+//最近邻 仿射变换
+Mat MyOpencv::xuanzhuan(Mat src, int angle)
+{
+	Mat matSrc, matDst;
+	matSrc = src;
+	double degree = angle;	//旋转角度
+	double angles = degree* CV_PI / 180;
+	double alpha = cos(angles);
+	double beta = sin(angles);
+	int iwidth = matSrc.cols;
+	int iheight = matSrc.rows;
+	int iNewWidth = cvRound(iwidth * fabs(alpha)+ iheight *fabs(beta));
+	int iNewHeight = cvRound(iheight * fabs(alpha) + iwidth * fabs(beta));
+
+	double m[6];			//变换矩阵  
+	m[0] = alpha;
+	m[1] = beta;
+	m[2] = (1 - alpha) * iwidth / 2 - beta * iheight / 2;
+	m[3] = -m[1];
+	m[4] = m[0];
+	m[5] = beta * iwidth / 2 + (1 - alpha)* iheight / 2;
+
+	Mat M = Mat(2,3,CV_64F,m);
+	matDst = Mat(Size(iNewWidth,iNewHeight),matSrc.type(),Scalar::all(0));		//全赋值为0的图像
+
+	double D = m[0] * m[4] - m[1] * m[3];
+	D = D != 0 ? 1. / D : 0;
+	double A11 = m[4] * D, A22 = m[0] * D;
+	m[0] = A11; m[1] *= -D;
+	m[3] *= -D; m[4] = A22;
+	double b1 = -m[0] * m[2] - m[1] * m[5];
+	double b2 = -m[3] * m[2] - m[4] * m[5];
+	m[2] = b1; m[5] = b2;
+
+	int round_delta = 512;
+	for (int  y = 0; y < iNewHeight; y++)
+	{
+		for (int  x = 0;  x < iNewWidth;  x++)
+		{
+			int adelta = saturate_cast<int>(m[0]* x * 1024);
+			int bdelta = saturate_cast<int>(m[3]* y * 1024);
+			int X0 = saturate_cast<int>((m[1] * y + m[2]) * 1024) + round_delta;
+			int Y0 = saturate_cast<int>((m[4] * y + m[5]) * 1024) + round_delta;
+			int X = (X0 + adelta) >> 10;
+			int Y = (Y0 + bdelta) >> 10;
+
+			if ((unsigned)X < iwidth && (unsigned)Y < iheight)
+			{
+				matDst.at<cv::Vec3b>(y, x) = matSrc.at<cv::Vec3b>(Y, X);
+			}
+		}
+	}
+
+	return matDst;
 }

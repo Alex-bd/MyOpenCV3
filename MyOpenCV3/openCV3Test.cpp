@@ -24,7 +24,8 @@ int main()
 	//经上面的测试，说明.jpg格式和.png格式的文件都能正常运行
 	MyOpencv m;
 	//dst = m.M_resize_zjl(src,800,600);
-	dst = m.M_resize_sxx(src,400,400);
+	//dst = m.M_resize_sxx(src,400,400);
+	dst = m.xuanzhuan(src,45);
 	imshow("show",dst);
 
 	waitKey(0);
