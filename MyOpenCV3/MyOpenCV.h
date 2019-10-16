@@ -18,8 +18,9 @@ public:
 	//函数声明：
 	Mat M_resize_zjl(Mat src,int x,int y);	//最近邻 重置大小
 	Mat M_resize_sxx(Mat src,int x,int y);	//双线性
-	Mat xuanzhuan(Mat src, int angle);		//旋转 仿射变换
-	Mat flip(Mat src,int flag);
+	Mat fangshe(Mat src, int angle);		// 仿射变换
+	Mat flip(Mat src,int flag);				//镜像
+	Mat rotateImage(Mat src, int degree, int border_value);	//旋转图像
 private:
 
 };
@@ -132,11 +133,12 @@ Mat MyOpencv::M_resize_sxx(Mat src,int x,int y)
 }
 
 //最近邻 仿射变换
-Mat MyOpencv::xuanzhuan(Mat src, int angle)
+//angle为旋转角度
+Mat MyOpencv::fangshe(Mat src, int angle)
 {
 	Mat matSrc, matDst;
 	matSrc = src;
-	double degree = angle;	//旋转角度
+	double degree = -angle;	//旋转角度
 	double angles = degree* CV_PI / 180;
 	double alpha = cos(angles);
 	double beta = sin(angles);
@@ -187,6 +189,10 @@ Mat MyOpencv::xuanzhuan(Mat src, int angle)
 }
 
 //镜像
+/* flag = 0 表示水平镜像
+   flag > 0 表示垂直镜像
+   flag < 0 表示水平垂直镜像
+*/
 Mat MyOpencv::flip(Mat src,int flag)
 {
 	Mat matSrc, matDst,matDst2;
@@ -232,5 +238,50 @@ Mat MyOpencv::flip(Mat src,int flag)
 		}
 		
 	}
+	return matDst;
+}
+
+
+//图像旋转：旋转（截取图像）Crop ，截取图像最大的内接矩形
+//         Mat img ：图像输入，单通道或者三通道
+//         Mat & imgout ：图像输出
+//         int degree ：图像要旋转的角度
+//         int border_value：图像旋转填充值(0-255)
+Mat MyOpencv::rotateImage(Mat src, int degree, int border_value)
+{
+	Mat matDst;
+	degree = -degree;//warpAffine默认的旋转方向是逆时针，所以加负号表示转化为顺时针
+	double angle = degree * CV_PI / 180.; // 弧度  
+	double a = sin(angle), b = cos(angle);
+	int width = src.cols;
+	int height = src.rows;
+	int width_rotate = int(width * fabs(b) - height * fabs(a));//height * fabs(a) + 
+	int height_rotate = int(height * fabs(b) - width * fabs(a));//width * fabs(a) + 
+	if (width_rotate <= 20 || height_rotate <= 20)
+	{
+		width_rotate = 20;
+		height_rotate = 20;
+	}
+	//旋转数组map
+	// [ m0  m1  m2 ] ===>  [ A11  A12   b1 ]
+	// [ m3  m4  m5 ] ===>  [ A21  A22   b2 ]
+	float map[6];
+	Mat map_matrix = Mat(2, 3, CV_32F, map);	//把旋转矩阵转成Mat的2 x 3 矩阵
+	// 旋转中心
+	CvPoint2D32f center = cvPoint2D32f(width / 2, height / 2);
+	CvMat map_matrix2 =  map_matrix;
+	cv2DRotationMatrix(center, degree, 1.0, &map_matrix2);//计算二维旋转的仿射变换矩阵   第三个参数为等向比例因子
+	map[2] += (width_rotate - width) / 2;		//b1
+	map[5] += (height_rotate - height) / 2;		//b2
+	//Mat img_rotate;
+	//对图像做仿射变换
+	//CV_WARP_FILL_OUTLIERS - 填充所有输出图像的象素。
+	//如果部分象素落在输入图像的边界外，那么它们的值设定为 fillval.
+	//CV_WARP_INVERSE_MAP - 指定 map_matrix 是输出图像到输入图像的反变换，
+	int chnnel = src.channels();
+	if (chnnel == 3)
+		warpAffine(src, matDst, map_matrix, Size(width_rotate, height_rotate), 1, 0, Scalar(border_value, border_value, border_value));//BGR
+	else
+		warpAffine(src, matDst, map_matrix, Size(width_rotate, height_rotate), 1, 0, border_value);
 	return matDst;
 }

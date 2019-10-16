@@ -23,10 +23,11 @@ int main()
 	src = imread("D:/CODE/ImageDashi/ImageDashi/ImageDashi/Image/edit/img_black.png");
 	//经上面的测试，说明.jpg格式和.png格式的文件都能正常运行
 	MyOpencv m;
-	//dst = m.M_resize_zjl(src,800,600);
-	//dst = m.M_resize_sxx(src,400,400);
-	//dst = m.xuanzhuan(src,45);
-	dst = m.flip(src , -1);
+	//dst = m.M_resize_zjl(src,800,600);	//最近邻	
+	//dst = m.M_resize_sxx(src,400,400);	//双线性内插
+	//dst = m.fangshe(src,-45);			//仿射变换
+	//dst = m.flip(src , -1);				//镜像
+	dst = m.rotateImage(src,180,0);		//任意角旋转
 	imshow("show",dst);
 
 	waitKey(0);
