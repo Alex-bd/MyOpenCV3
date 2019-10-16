@@ -189,28 +189,48 @@ Mat MyOpencv::xuanzhuan(Mat src, int angle)
 //¾µÏñ
 Mat MyOpencv::flip(Mat src,int flag)
 {
-	Mat matSrc, matDst;
+	Mat matSrc, matDst,matDst2;
 	matSrc = src;
 	int width = matSrc.cols;
 	int height = matSrc.rows;
 	matDst = Mat(Size(width,height), matSrc.type(), Scalar::all(0));
+	
 	if (flag == 0)//Ë®Æ½¾µÏñ
 	{
-		for (int y = 0; y < matSrc.cols; y++)
+		for (int i = 0; i < matSrc.rows; i++)
 		{
-			for (int x = 0; x < matSrc.rows; x++)
+			for (int j = 0; j < matSrc.cols; j++)
 			{
-				matDst.at<cv::Vec3b>(y,x) = matSrc.at<cv::Vec3b>(y,width-x-1);
+				matDst.at<Vec3b>(i, j)[0] = matSrc.at<Vec3b>(i, src.cols - 1 - j)[0];
+				matDst.at<Vec3b>(i, j)[1] = matSrc.at<Vec3b>(i, src.cols - 1 - j)[1];
+				matDst.at<Vec3b>(i, j)[2] = matSrc.at<Vec3b>(i, src.cols - 1 - j)[2];
 			}
 		}
 	}
 	else if (flag > 0)	//´¹Ö±¾µÏñ
 	{
-
+		for (int i = 0; i < matSrc.rows; i++)
+		{
+			for (int j = 0; j < matSrc.cols; j++)
+			{
+				matDst.at<Vec3b>(i, j)[0] = matSrc.at<Vec3b>(src.rows -1 -i, j)[0];
+				matDst.at<Vec3b>(i, j)[1] = matSrc.at<Vec3b>(src.rows - 1 - i, j)[1];
+				matDst.at<Vec3b>(i, j)[2] = matSrc.at<Vec3b>(src.rows - 1 - i, j)[2];
+			}
+		}
 	}
 	else
 	{
-
+		for (int i = 0; i < matSrc.rows; i++)
+		{
+			for (int j = 0; j < matSrc.cols; j++)
+			{
+				matDst.at<Vec3b>(i, j)[0] = matSrc.at<Vec3b>(src.rows - 1 - i, src.cols - 1 - j)[0];
+				matDst.at<Vec3b>(i, j)[1] = matSrc.at<Vec3b>(src.rows - 1 - i, src.cols - 1 - j)[1];
+				matDst.at<Vec3b>(i, j)[2] = matSrc.at<Vec3b>(src.rows - 1 - i, src.cols - 1 - j)[2];
+			}
+		}
+		
 	}
 	return matDst;
 }

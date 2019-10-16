@@ -26,7 +26,7 @@ int main()
 	//dst = m.M_resize_zjl(src,800,600);
 	//dst = m.M_resize_sxx(src,400,400);
 	//dst = m.xuanzhuan(src,45);
-	dst = m.flip(src,0);
+	dst = m.flip(src , -1);
 	imshow("show",dst);
 
 	waitKey(0);
