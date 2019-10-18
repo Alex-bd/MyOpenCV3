@@ -27,7 +27,8 @@ int main()
 	//dst = m.M_resize_sxx(src,400,400);	//双线性内插
 	//dst = m.fangshe(src,-45);			//仿射变换
 	//dst = m.flip(src , -1);				//镜像
-	dst = m.rotateImage(src,180,0);		//任意角旋转
+	//dst = m.rotateImage(src,180,0);		//任意角旋转
+	dst = m.threshold(src,127);
 	imshow("show",dst);
 
 	waitKey(0);

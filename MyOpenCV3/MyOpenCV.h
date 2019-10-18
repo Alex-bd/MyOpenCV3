@@ -4,6 +4,7 @@
 */
 #pragma once
 //重写OpenCV的头文件
+#include <iostream>
 #include <opencv2/core/core.hpp>
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
@@ -21,6 +22,7 @@ public:
 	Mat fangshe(Mat src, int angle);		// 仿射变换
 	Mat flip(Mat src,int flag);				//镜像
 	Mat rotateImage(Mat src, int degree, int border_value);	//旋转图像
+	Mat threshold(Mat src,unsigned char threshold);
 private:
 
 };
@@ -284,4 +286,47 @@ Mat MyOpencv::rotateImage(Mat src, int degree, int border_value)
 	else
 		warpAffine(src, matDst, map_matrix, Size(width_rotate, height_rotate), 1, 0, border_value);
 	return matDst;
+}
+
+Mat MyOpencv::threshold(Mat src, unsigned char threshold)
+{
+	//读取一幅影像
+	Mat matSrc = src;
+	/*Mat matDst;*/
+	//如果影像为空的话，直接返回
+	if (matSrc.empty())
+	{
+		cout << "输入图像为空" << endl;
+	}
+	//获取影像的行和列
+	int iWidth = matSrc.cols;
+	int iHeight = matSrc.rows;
+	//创建结果影像,因为是二值化影像，所以创建的是灰度影像
+	Mat Dst = Mat(iHeight, iWidth, CV_8UC1);
+	//将彩色影像转换为灰度影像
+	//转换公式为
+	//Y = 0.2126 R + 0.7152 G + 0.0722 B.
+	unsigned char Threshold = threshold;
+	for (int i = 0; i < iHeight; i++)
+	{
+		for (int j = 0; j < iWidth; j++)
+		{
+			//需要注意的一个地方是OpenCV读取彩色影像的是BGR的顺序
+			//先将彩色影像转换为灰度影像
+			unsigned char B = matSrc.at<Vec3b>(i, j)[0];
+			unsigned char G = matSrc.at<Vec3b>(i, j)[1];
+			unsigned char R = matSrc.at<Vec3b>(i, j)[2];
+			unsigned char iGray = 0.2126 * R + 0.7152 * G + 0.0722 * B;
+			//进行灰度二值化处理
+			if (iGray > Threshold)
+			{
+				Dst.at<unsigned char>(i, j) = 255;
+			}
+			else
+			{
+				Dst.at<unsigned char>(i, j) = 0;
+			}
+		}
+	}
+	return Dst;
 }
