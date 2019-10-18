@@ -22,7 +22,8 @@ public:
 	Mat fangshe(Mat src, int angle);		// 仿射变换
 	Mat flip(Mat src,int flag);				//镜像
 	Mat rotateImage(Mat src, int degree, int border_value);	//旋转图像
-	Mat threshold(Mat src,unsigned char threshold);
+	Mat threshold(Mat src,unsigned char threshold);		//二值化
+	Mat gamma(Mat src,int gamma,int c);			//伽马变换
 private:
 
 };
@@ -329,4 +330,51 @@ Mat MyOpencv::threshold(Mat src, unsigned char threshold)
 		}
 	}
 	return Dst;
+}
+
+/*伽马变换*/
+//规定：gamma送进来的数要除以100
+//c:为常数c，默认为255
+Mat MyOpencv::gamma(Mat src,int gamma,int c)
+{
+	Mat matDst;
+	if (gamma < 0)
+	{
+		cout << "gamma取值错误"<<endl;
+		return src;
+	}
+	/*单通道*/
+	Mat lookuptable(1, 256,CV_8U);	//查找表
+	uchar* p = lookuptable.ptr();
+	for (int  i = 0; i < 256; i++)
+	{
+		p[i] = saturate_cast<uchar>(pow( i /255.0,gamma/100) * c);
+	}
+	LUT(src,lookuptable,matDst);
+	////三通道(每个通道单独一个查找表)
+	//uchar lookuptable[256 * 3];
+	//for (int i = 0; i < 256; i++)
+	//{
+	//	if (i <= 100)
+	//	{
+	//		lookuptable[i * 3] = 0;
+	//		lookuptable[i * 3 + 1] = 50;
+	//		lookuptable[i * 3 + 2] = 50;
+	//	}
+	//	if (i > 100 && i <= 200)
+	//	{
+	//		lookuptable[i * 3] = 100;
+	//		lookuptable[i * 3 + 1] = 10;
+	//		lookuptable[i * 3 + 2] = 200;
+	//	}
+	//	if (i > 200)
+	//	{
+	//		lookuptable[i * 3] = 255;
+	//		lookuptable[i * 3 + 1] = 200;
+	//		lookuptable[i * 3 + 2] = 100;
+	//	}
+	//}
+	//Mat lut(1,256,CV_8UC3,lookuptable);
+	//LUT(src, lut, matDst);
+	return matDst;
 }
