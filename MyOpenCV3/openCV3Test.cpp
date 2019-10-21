@@ -29,7 +29,8 @@ int main()
 	//dst = m.flip(src , -1);				//镜像
 	//dst = m.rotateImage(src,180,0);		//任意角旋转
 	//dst = m.threshold(src,127);			//二值化
-	dst = m.gamma(src,100,255);				//伽马变换
+	//dst = m.gamma(src,100,255);				//伽马变换
+	dst = m.Log(src,178);					//对数变换
 	imshow("show",dst);
 
 	waitKey(0);

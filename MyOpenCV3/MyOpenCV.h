@@ -8,6 +8,7 @@
 #include <opencv2/core/core.hpp>
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#include <cmath>
 
 using namespace cv;
 using namespace std;
@@ -24,6 +25,7 @@ public:
 	Mat rotateImage(Mat src, int degree, int border_value);	//旋转图像
 	Mat threshold(Mat src,unsigned char threshold);		//二值化
 	Mat gamma(Mat src,int gamma,int c);			//伽马变换
+	Mat Log(Mat src, int c);					//对数变换
 private:
 
 };
@@ -376,5 +378,21 @@ Mat MyOpencv::gamma(Mat src,int gamma,int c)
 	//}
 	//Mat lut(1,256,CV_8UC3,lookuptable);
 	//LUT(src, lut, matDst);
+	return matDst;
+}
+//对数变换
+Mat MyOpencv::Log(Mat src, int c)
+{
+	Mat  matDst;
+	//建立查找表
+	Mat lookupTable(1,256,CV_8U);
+	uchar *p = lookupTable.ptr();
+	for (int  i = 0; i < 256; ++i)
+	{
+		//p[i] = saturate_cast<uchar>((c / 100.0) * log(1 + i / 255.0) * 255.0);//对数公式
+		p[i] = saturate_cast<uchar>((c / 100.0)* log(1 + i / 255.0) * 255.0);
+	}
+	LUT(src,lookupTable,matDst);
+
 	return matDst;
 }
