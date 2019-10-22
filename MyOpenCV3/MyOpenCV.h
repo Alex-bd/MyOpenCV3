@@ -409,12 +409,12 @@ IplImage* MyOpencv::myDrawHistogram(int * hist_cal)
 	{
 		if (hist_cal[i] > hist_max)
 		{
-			hist_max = hist_cal[i];
+			hist_max = hist_cal[i];		//找到最大值
 		}
 	}
 	//创建一幅空白的图像，用来显示直方图
 	IplImage* hist_image = cvCreateImage(cvSize(256*3,64*3),8,1);
-	//Mat hist_image(256*3,63*3,CV_8UC3,Scalar(0,0,0));
+	//Mat hist_image(256*3,64*3,CV_8UC3,Scalar(0,0,0));
 	cvZero(hist_image);
 	
 	for (int  j = 0; j < 256; j++)
@@ -438,58 +438,57 @@ IplImage* MyOpencv::myDrawHistogram(int * hist_cal)
 }
 
 
-int p[256];
-int dst_p[256];
-void myEqualizeHist(CvArr* srcarr, CvArr* dstarr)//直方图均衡化
+int p[256];			//源查找表数组
+int dst_p[256];		//目标查找表数组
+//直方图均衡化
+void myEqualizeHist(CvArr* srcarr, CvArr* dstarr)
 {
 	CvMat sstub;
 	CvMat dstub;
 	CvMat* src = cvGetMat(srcarr, &sstub);//convert CvArr to CvMat
 	CvMat* dst = cvGetMat(dstarr, &dstub);
-
-	//CvSize size = cvGetMatSize(src);
-	CvSize size = cvSize(src->rows,src->cols);
-	
+					
+	CvSize size = cvSize(src->rows,src->cols);	//求出src尺寸
 
 	int x, y;
-	const int hist_size = 256;
+	const int hist_size = 256;	//直方图灰度范围
 	//int p[hist_size];//p数组长度为图像的灰度等级（一般为256）
-	fill(p, p + hist_size, 0);//初始化为0		//初始化p[256]数组全部为0
+	fill(p, p + hist_size, 0);	//初始化p[256]数组全部为0
 
 	//扫描图像的每一个像素点，像素值为k则hist[k]++
 	for (y = 0; y < size.height; y++)
 	{
-		const uchar* sptr = src->data.ptr + src->step * y;
+		const uchar* sptr = src->data.ptr + src->step * y;		//一行一行的指向
 		for (x = 0; x < size.width; x++)
 		{
-			p[sptr[x]]++;//相当于[x][y]这个点对应的像素值++
+			p[sptr[x]]++;	//相当于[x][y]这个点对应的像素值++   sptr[x]就是个值，该值代表某点的灰度值
 		}
 	}
 
 	int c[hist_size];
 	c[0] = p[0];
-	//累积函数
+	//累计函数，求出图像各灰度级的累计分布
 	for (int i = 1; i < hist_size; i++)
 	{
 		c[i] = c[i - 1] + p[i];
 	}
 
-	uchar lut[hist_size];
+	uchar lut[hist_size];   //定义 查找表
 	//根据映射函数，建立look up table
 	for (int i = 0; i < hist_size; i++)
 	{
-		int val = cvRound(c[i] * (255.f / (src->cols * src->rows)));
-		lut[i] =CV_CAST_8U(val);//像素值i映射之后值为lut[i]
+		int val = cvRound(c[i] * (255.f / (src->cols * src->rows)));	//累计函数*255/N
+		lut[i] =CV_CAST_8U(val);//像素值i映射之后值为lut[i]	  //把int结果转为uchar ,规则见宏定义
 	}
 	
-	//根据look up table，改变图像像素值
+	//根据look up table，改变图像像素值，已计算出均衡化后的图像各点像素值
 	for (y = 0; y < size.height; y++)
 	{
 		const uchar* sptr = src->data.ptr + src->step * y;
 		uchar* dptr = dst->data.ptr + dst->step * y;
 		for (x = 0; x < size.width; x++)
 		{
-			dptr[x] = lut[sptr[x]];
+			dptr[x] = lut[sptr[x]];			
 		}
 	}
 

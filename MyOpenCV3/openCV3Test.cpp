@@ -55,7 +55,7 @@ int main()
  
 	cvMerge(blueImage, greenImage, redImage, NULL, image);
 	cvShowImage("自己实现的直方图均衡化", image);
-
+	/*************************直方图均衡化结束*******************/
 	//imshow("show",dst);
 
 	waitKey(0);
