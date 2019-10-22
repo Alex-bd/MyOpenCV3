@@ -9,6 +9,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include <cmath>
+#define  CV_CAST_8U(t)  (uchar)(!((t) & ~255) ? (t) : (t) > 0 ? 255 : 0) //就是把t强制转化为uchar类型，如果t>=255 则t=255 如果t<=0 则t=0;
 
 using namespace cv;
 using namespace std;
@@ -26,6 +27,9 @@ public:
 	Mat threshold(Mat src,unsigned char threshold);		//二值化
 	Mat gamma(Mat src,int gamma,int c);			//伽马变换
 	Mat Log(Mat src, int c);					//对数变换
+	IplImage* myDrawHistogram(int* hist_cal);	//显示直方图
+	void myEqualizeHist(CvArr* srcarr, CvArr* dstarr);//直方图均衡化
+	
 private:
 
 };
@@ -395,4 +399,109 @@ Mat MyOpencv::Log(Mat src, int c)
 	LUT(src,lookupTable,matDst);
 
 	return matDst;
+}
+//直方图显示
+IplImage* MyOpencv::myDrawHistogram(int * hist_cal)
+{
+	//找出直方图中最大值，以便进行归一化
+	int hist_max = 0;
+	for (int  i = 0; i < 256; i++)
+	{
+		if (hist_cal[i] > hist_max)
+		{
+			hist_max = hist_cal[i];
+		}
+	}
+	//创建一幅空白的图像，用来显示直方图
+	IplImage* hist_image = cvCreateImage(cvSize(256*3,64*3),8,1);
+	//Mat hist_image(256*3,63*3,CV_8UC3,Scalar(0,0,0));
+	cvZero(hist_image);
+	
+	for (int  j = 0; j < 256; j++)
+	{
+		CvPoint p0 = cvPoint(j * 3, 0);
+		CvPoint p1 = cvPoint((j + 1) * 3, cvRound(((hist_max - hist_cal[j]) * 64) / hist_max * 3));//对角线的顶点
+		/* 
+		 第三个参数：color 
+		线条颜色 (RGB) 或亮度（灰度图像 ）(grayscale image）。 
+		第四个参数：thickness 
+		组成矩形的线条的粗细程度。取负值时（如 CV_FILLED）函数绘制填充了色彩的矩形。 
+		第五个参数：line_type 
+		线条的类型。见cvLine的描述 
+		第六个参数：shift 
+		坐标点的小数点位数。 */
+		cvRectangle(hist_image,p0,p1,cvScalar(255,255,255),-1,8,0);
+		//当在Mat类型图上绘制矩形时，选择cv::trctangle()
+		//rectangle(hist_image,p0,p1,cvScalar(255,255,255),-1,8,0);
+	}
+	return hist_image;
+}
+
+
+int p[256];
+int dst_p[256];
+void myEqualizeHist(CvArr* srcarr, CvArr* dstarr)//直方图均衡化
+{
+	CvMat sstub;
+	CvMat dstub;
+	CvMat* src = cvGetMat(srcarr, &sstub);//convert CvArr to CvMat
+	CvMat* dst = cvGetMat(dstarr, &dstub);
+
+	//CvSize size = cvGetMatSize(src);
+	CvSize size = cvSize(src->rows,src->cols);
+	
+
+	int x, y;
+	const int hist_size = 256;
+	//int p[hist_size];//p数组长度为图像的灰度等级（一般为256）
+	fill(p, p + hist_size, 0);//初始化为0		//初始化p[256]数组全部为0
+
+	//扫描图像的每一个像素点，像素值为k则hist[k]++
+	for (y = 0; y < size.height; y++)
+	{
+		const uchar* sptr = src->data.ptr + src->step * y;
+		for (x = 0; x < size.width; x++)
+		{
+			p[sptr[x]]++;//相当于[x][y]这个点对应的像素值++
+		}
+	}
+
+	int c[hist_size];
+	c[0] = p[0];
+	//累积函数
+	for (int i = 1; i < hist_size; i++)
+	{
+		c[i] = c[i - 1] + p[i];
+	}
+
+	uchar lut[hist_size];
+	//根据映射函数，建立look up table
+	for (int i = 0; i < hist_size; i++)
+	{
+		int val = cvRound(c[i] * (255.f / (src->cols * src->rows)));
+		lut[i] =CV_CAST_8U(val);//像素值i映射之后值为lut[i]
+	}
+	
+	//根据look up table，改变图像像素值
+	for (y = 0; y < size.height; y++)
+	{
+		const uchar* sptr = src->data.ptr + src->step * y;
+		uchar* dptr = dst->data.ptr + dst->step * y;
+		for (x = 0; x < size.width; x++)
+		{
+			dptr[x] = lut[sptr[x]];
+		}
+	}
+
+	//计算直方图均衡化之后的图像的像素分布
+	//int dst_p[hist_size];
+	fill(dst_p, dst_p + hist_size, 0);
+	for (y = 0; y < size.height; y++)
+	{
+		const uchar* dst_sptr = dst->data.ptr + dst->step * y;
+		for (x = 0; x < size.width; x++)
+		{
+			dst_p[dst_sptr[x]]++;//相当于[x][y]这个点对应的像素值++
+		}
+	}
 }
